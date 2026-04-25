@@ -14,12 +14,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.HashSet;
 
 public class Download {
 
     public static void main(String[] args) {
 
-        String tableName = "MusicTable";
+        String tableName = "music";
         String bucketName = "a2-assignment-cloud-computing-2026";
 
         try {
@@ -38,15 +40,21 @@ public class Download {
             ItemCollection<ScanOutcome> items = table.scan(new ScanSpec());
             Iterator<Item> iter = items.iterator();
 
+            // Fix 1: avoid duplicate uploads
+            Set<String> uploadedArtists = new HashSet<>();
+
             while (iter.hasNext()) {
 
                 Item item = iter.next();
 
                 String artist = item.getString("artist");
-                String title = item.getString("title");
                 String imageUrl = item.getString("image_url");
 
-                System.out.println("Processing: " + title);
+                // Skip if already uploaded
+                if (uploadedArtists.contains(artist)) continue;
+                uploadedArtists.add(artist);
+
+                System.out.println("Processing artist: " + artist);
                 System.out.println("URL: " + imageUrl);
 
                 try {
@@ -54,21 +62,18 @@ public class Download {
                     InputStream inputStream = url.openStream();
 
                     ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-                    int nRead;
                     byte[] data = new byte[1024];
+                    int nRead;
 
-                    while ((nRead = inputStream.read(data, 0, data.length)) != -1) {
+                    while ((nRead = inputStream.read(data)) != -1) {
                         buffer.write(data, 0, nRead);
                     }
 
-                    buffer.flush();
                     byte[] bytes = buffer.toByteArray();
-
                     ByteArrayInputStream byteStream = new ByteArrayInputStream(bytes);
 
                     String safeArtist = artist.replaceAll("[^a-zA-Z0-9]", "");
-                    String safeTitle = title.replaceAll("[^a-zA-Z0-9]", "");
-                    String keyName = safeArtist + "_" + safeTitle + ".jpg";
+                    String keyName = safeArtist + ".jpg";
 
                     ObjectMetadata metadata = new ObjectMetadata();
                     metadata.setContentLength(bytes.length);
@@ -78,10 +83,14 @@ public class Download {
 
                     System.out.println("Uploaded: " + keyName);
 
+                    // Close streams
                     inputStream.close();
+                    buffer.close();
+                    byteStream.close();
 
                 } catch (Exception e) {
-                    System.err.println("Failed: " + title);
+                    System.err.println("Failed for artist: " + artist);
+                    e.printStackTrace();
                 }
             }
 

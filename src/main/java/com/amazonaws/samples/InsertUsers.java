@@ -2,7 +2,6 @@ package com.amazonaws.samples;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 
 import com.amazonaws.services.dynamodbv2.*;
 import com.amazonaws.services.dynamodbv2.model.*;
@@ -15,14 +14,23 @@ public class InsertUsers {
                 .withRegion("us-east-1")
                 .build();
 
-        String tableName = "Login";
+        String tableName = "login";
 
-        Random rand = new Random();
+        // Fixed password sequence
+        String[] passwords = {
+                "012345","123456","234567","345678","456789",
+                "567890","678901","789012","890123","901234"
+        };
+
         for (int i = 0; i < 10; i++) {
 
-            String email = "s123456" + i + "@student.rmit.edu.au";
-            String username = "JohnDoe" + i;
-            String password = String.valueOf(100000 + rand.nextInt(900000));
+            // Replace with your real student ID
+            String email = "s4106619" + i + "@student.rmit.edu.au";
+
+            // Replace with your actual name
+            String username = "Ashwin Patrick" + i;
+
+            String password = passwords[i];
 
             Map<String, AttributeValue> item = new HashMap<>();
             item.put("email", new AttributeValue(email));

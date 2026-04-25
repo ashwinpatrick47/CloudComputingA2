@@ -1,7 +1,5 @@
 package com.amazonaws.samples;
 
-import java.util.Arrays;
-
 import com.amazonaws.services.dynamodbv2.*;
 import com.amazonaws.services.dynamodbv2.document.*;
 import com.amazonaws.services.dynamodbv2.model.*;
@@ -16,22 +14,22 @@ public class MusicTable {
 
         DynamoDB dynamoDB = new DynamoDB(client);
 
-        String tableName = "MusicTable";
+        String tableName = "music";
 
         try {
-            System.out.println("Creating music table with GSI and LSI...");
+            System.out.println("Creating music table");
 
             // Attribute definitions
             AttributeDefinition artistAttr = new AttributeDefinition("artist", ScalarAttributeType.S);
-            AttributeDefinition titleAttr = new AttributeDefinition("title", ScalarAttributeType.S);
+            AttributeDefinition albumTitleAttr = new AttributeDefinition("album_title", ScalarAttributeType.S);
             AttributeDefinition albumAttr = new AttributeDefinition("album", ScalarAttributeType.S);
             AttributeDefinition yearAttr = new AttributeDefinition("year", ScalarAttributeType.N);
 
             // Primary Key
             KeySchemaElement artistKey = new KeySchemaElement("artist", KeyType.HASH);
-            KeySchemaElement titleKey = new KeySchemaElement("title", KeyType.RANGE);
+            KeySchemaElement albumTitleKey = new KeySchemaElement("album_title", KeyType.RANGE);
 
-            // LSI (same PK, different sort key)
+            // LSI
             LocalSecondaryIndex lsi = new LocalSecondaryIndex()
                     .withIndexName("ArtistYearIndex")
                     .withKeySchema(
@@ -40,7 +38,7 @@ public class MusicTable {
                     )
                     .withProjection(new Projection().withProjectionType(ProjectionType.ALL));
 
-            // GSI (different PK)
+            // GSI
             GlobalSecondaryIndex gsi = new GlobalSecondaryIndex()
                     .withIndexName("AlbumYearIndex")
                     .withKeySchema(
@@ -50,10 +48,11 @@ public class MusicTable {
                     .withProjection(new Projection().withProjectionType(ProjectionType.ALL))
                     .withProvisionedThroughput(new ProvisionedThroughput(5L, 5L));
 
+            // Create table
             CreateTableRequest request = new CreateTableRequest()
                     .withTableName(tableName)
-                    .withKeySchema(artistKey, titleKey)
-                    .withAttributeDefinitions(artistAttr, titleAttr, albumAttr, yearAttr)
+                    .withKeySchema(artistKey, albumTitleKey)
+                    .withAttributeDefinitions(artistAttr, albumTitleAttr, albumAttr, yearAttr)
                     .withProvisionedThroughput(new ProvisionedThroughput(5L, 5L))
                     .withLocalSecondaryIndexes(lsi)
                     .withGlobalSecondaryIndexes(gsi);

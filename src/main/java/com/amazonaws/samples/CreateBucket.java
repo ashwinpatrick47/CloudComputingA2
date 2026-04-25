@@ -15,11 +15,10 @@ public class CreateBucket {
 
     public static void main(String[] args) throws IOException {
         Regions clientRegion = Regions.US_EAST_1;
-        String bucketName = "a2-assignment-cloud-computing-2026";//e.g., sxxxxxxx-s3test
+        String bucketName = "a2-assignment-cloud-computing-2026";
 
         try {
             AmazonS3 s3Client = AmazonS3ClientBuilder.standard()
-                    .withCredentials(new ProfileCredentialsProvider())
                     .withRegion(clientRegion)
                     .build();
 
