@@ -1,83 +1,96 @@
-import { usestate } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import '../styles/register.css';
 
-const API_BASE = "https://API_URL"; // replace later
+const API_BASE = 'https://YOUR_API_URL';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     try {
       const res = await fetch(`${API_BASE}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, username, password }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, user_name: username, password }),
       });
 
       const data = await res.json();
 
       if (res.status === 409 || !data.success) {
-        setError("email already exists");
+        setError('The email already exists');
       } else {
         navigate('/');
       }
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-    return (
-      <div>
-        <h2>Register</h2>
-        <form onSubmit={handleRegister}>
-          <div>
-            <label>Email:</label>
+  return (
+    <div className="login-page">
+      <div className="login-card">
+        <div className="login-brand">
+          <h1>Tune Vault</h1>
+        </div>
+        <p className="login-tagline">Create your account.</p>
+
+        <form className="login-form" onSubmit={handleRegister}>
+          <div className="form-field">
+            <label htmlFor="email">Email</label>
             <input
+              id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
+              placeholder="you@student.rmit.edu.au"
             />
           </div>
-          <div>
-            <label>Username:</label>
+
+          <div className="form-field">
+            <label htmlFor="username">Username</label>
             <input
+              id="username"
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              required
+              placeholder="Your name"
             />
           </div>
-          <div>
-            <label>Password:</label>
+
+          <div className="form-field">
+            <label htmlFor="password">Password</label>
             <input
+              id="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
+              placeholder="••••••"
             />
           </div>
 
-          {error && <p>{error}</p>}
+          {error && <p className="error-message">{error}</p>}
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Registering..." : "Register"}
+          <button className="submit-btn" type="submit" disabled={loading}>
+            {loading ? 'Registering...' : 'Register'}
           </button>
         </form>
-        <p>
+
+        <p className="register-link">
           Already have an account? <Link to="/">Login here</Link>
         </p>
       </div>
-    );
-  }
+    </div>
+  );
+}

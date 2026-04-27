@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import '../styles/login.css';
 
 const API_BASE = 'https://API_URL'; // replace later
 
@@ -13,59 +14,80 @@ export default function LoginPage() {
     const handleLogin = async (e) => {
       e.preventDefault();
       setError('');
-      setLoading(true);
+      // setLoading(true);
       
-      try {
-        const res = await fetch(`${API_BASE}/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password }),
-        });
+      // try {
+      //   const res = await fetch(`${API_BASE}/login`, {
+      //     method: 'POST',
+      //     headers: { 'Content-Type': 'application/json' },
+      //     body: JSON.stringify({ email, password }),
+      //   });
 
-        const data = await res.json();
+      //   const data = await res.json();
 
-        if (res.ok && data.success) {
-          sessionStorage.setItem('user_email', email);
-          sessionStorage.setItem('user_name', data.user_name);
-          navigate('/main');
-        } else {
-          setError('email or password is incorrect');
-        }
-      } catch (err) {
-        setError('email or password is incorrect');
-      } finally {
-        setLoading(false);
+      //   if (res.ok && data.success) {
+      //     sessionStorage.setItem('user_email', email);
+      //     sessionStorage.setItem('user_name', data.user_name);
+      //     navigate('/main');
+      //   } else {
+      //     setError('email or password is incorrect');
+      //   }
+      // } catch (err) {
+      //   setError('email or password is incorrect');
+      // } finally {
+      //   setLoading(false);
+      // }
+
+      // Dummy credentials for testing
+      if (email === 'test@student.rmit.edu.au' && password === 'test@rmit123') {
+        sessionStorage.setItem('user_email', email);
+        sessionStorage.setItem('user_name', 'TestUser');
+        navigate('/main');
+      } else {
+        setError('email or password is invalid');
       }
     };
 
     return (
-      <div>
-        <h2>Login</h2>
-        <form onSumbit={handleLogin}>
-          <div>
-            <label>Email:</label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} required />
-          </div>
-          <div>
-            <label>Password:</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} required />
-          </div>
-
-          {error && <p style={{ color: 'red' }}>{error}</p>}
-
-          <button type="submit" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+      <div className="login-page">
+        <div className="login-card">
+          <div className="login-brand">
+            <h1>Tune Vault</h1>
+          </div>  
+          <form className="login-form" onSubmit={handleLogin}>
+            <div className="form-field">
+              <label htmlFor="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@student.rmit.edu.au"
+              />
+            </div>
+  
+            <div className="form-field">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••"
+              />
+            </div>
+  
+            {error && <p className="error-message">{error}</p>}
+  
+            <button className="submit-btn" type="submit" disabled={loading}>
+              {loading ? 'Logging in...' : 'Login'}
             </button>
-        </form>
-        <p>
-          Don't have an account? <Link to="/register">Register here</Link>
-        </p>
+          </form>
+  
+          <p className="register-link">
+            Don't have an account? <Link to="/register">Register here</Link>
+          </p>
+        </div>
       </div>
-    )
+    );
   }
