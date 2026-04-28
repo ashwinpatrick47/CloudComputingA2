@@ -1,8 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import '../styles/login.css';
-
-const API_BASE = 'https://API_URL'; // replace later
+import { API } from '../config';
 
 export default function LoginPage() {
     const navigate = useNavigate();
@@ -14,38 +13,38 @@ export default function LoginPage() {
     const handleLogin = async (e) => {
       e.preventDefault();
       setError('');
-      // setLoading(true);
+      setLoading(true);
       
-      // try {
-      //   const res = await fetch(`${API_BASE}/login`, {
-      //     method: 'POST',
-      //     headers: { 'Content-Type': 'application/json' },
-      //     body: JSON.stringify({ email, password }),
-      //   });
+      try {
+        const res = await fetch(API.login, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        });
 
-      //   const data = await res.json();
+        const data = await res.json();
 
-      //   if (res.ok && data.success) {
-      //     sessionStorage.setItem('user_email', email);
-      //     sessionStorage.setItem('user_name', data.user_name);
-      //     navigate('/main');
-      //   } else {
-      //     setError('email or password is incorrect');
-      //   }
-      // } catch (err) {
-      //   setError('email or password is incorrect');
-      // } finally {
-      //   setLoading(false);
-      // }
-
-      // Dummy credentials for testing
-      if (email === 'test@student.rmit.edu.au' && password === 'test@rmit123') {
-        sessionStorage.setItem('user_email', email);
-        sessionStorage.setItem('user_name', 'TestUser');
-        navigate('/main');
-      } else {
-        setError('email or password is invalid');
+        if (res.ok && data.success) {
+          sessionStorage.setItem('user_email', email);
+          sessionStorage.setItem('user_name', data.user_name);
+          navigate('/main');
+        } else {
+          setError('email or password is incorrect');
+        }
+      } catch (err) {
+        setError('email or password is incorrect');
+      } finally {
+        setLoading(false);
       }
+
+      // // Dummy credentials for testing
+      // if (email === 'test@student.rmit.edu.au' && password === 'test@rmit123') {
+      //   sessionStorage.setItem('user_email', email);
+      //   sessionStorage.setItem('user_name', 'TestUser');
+      //   navigate('/main');
+      // } else {
+      //   setError('email or password is invalid');
+      // }
     };
 
     return (
