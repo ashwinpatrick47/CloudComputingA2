@@ -17,18 +17,12 @@ def convert_decimals(obj):
         return obj
 
 def lambda_handler(event, context):
-
-    if 'body' in event:
-        body = json.loads(event['body'])
-    else:
-        body = event
-
-    artist = body.get('artist')
-    album = body.get('album')
-    year = body.get('year')
-    title = body.get('title')
-
-    results = []
+    params = event.get('queryStringParameters') or {}
+    
+    artist = params.get('artist')
+    album = params.get('album')
+    year = params.get('year')
+    title = params.get('title')
 
     if artist:
         response = table.query(
@@ -39,6 +33,7 @@ def lambda_handler(event, context):
         response = table.scan()
         items = response['Items']
 
+    results = []
     for item in items:
         if album and item.get('album') != album:
             continue
@@ -46,7 +41,6 @@ def lambda_handler(event, context):
             continue
         if title and title.lower() not in item.get('title', '').lower():
             continue
-
         results.append(item)
 
     clean_results = convert_decimals(results)
