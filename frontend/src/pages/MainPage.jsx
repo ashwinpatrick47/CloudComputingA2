@@ -21,8 +21,21 @@ export default function MainPage() {
   // normalize API response
   const toArray = (data) => {
     if (!data) return [];
+
+    // CASE 1: already array
     if (Array.isArray(data)) return data;
 
+    // CASE 2: raw string (VERY IMPORTANT FIX)
+    if (typeof data === "string") {
+      try {
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    // CASE 3: API Gateway format
     if (data.body) {
       try {
         const parsed =
@@ -36,6 +49,7 @@ export default function MainPage() {
       }
     }
 
+    // CASE 4: songs wrapper
     if (data.songs && Array.isArray(data.songs)) return data.songs;
 
     return [];
@@ -50,10 +64,26 @@ export default function MainPage() {
   useEffect(() => {
     const fetchSubscriptions = async () => {
       try {
-        const res = await fetch(`${API.subscribe}?email=${userEmail}`);
+        const res = await fetch(`${API.getSubscribe}?email=${userEmail}`);
         const raw = await res.json();
-        const data = raw.body ? JSON.parse(raw.body) : raw;
-        setSubscriptions(toArray(data));
+        setSubscriptions(Array.isArray(raw) ? raw : []);
+
+
+//         let parsed;
+//
+//         if (typeof raw === "string") {
+//           parsed = JSON.parse(raw);
+//         } else if (raw.body) {
+//           parsed = typeof raw.body === "string" ? JSON.parse(raw.body) : raw.body;
+//         } else {
+//           parsed = raw;
+//         }
+//
+//         setSubscriptions(Array.isArray(parsed) ? parsed : []);
+
+
+
+
       } catch {
         setSubscriptions([]);
       }
@@ -130,16 +160,40 @@ export default function MainPage() {
       if (res.ok) {
         setSubscriptions((prev) => [...prev, song]);
       }
-    } catch {}
+    } catch (err) {
+      console.error(err);
+    }
   };
+
+//       const result = await res.json();
+//       if (res.ok) {
+//         // Refetch subscriptions from backend instead of appending
+//         const subsRes = await fetch(`${API.getSubscribe}?email=${userEmail}`);
+//         const rawSubs = await subsRes.json();
+//         let parsed;
+//
+//         if (rawSubs.body) {
+//           parsed = JSON.parse(rawSubs.body);
+//         } else if (typeof rawSubs === "string") {
+//           parsed = JSON.parse(rawSubs);
+//         } else {
+//           parsed = rawSubs;
+//         }
+//
+//         setSubscriptions(Array.isArray(parsed) ? parsed : []);
+//       } else {
+//           alert(result.body || JSON.stringify(result));
+//           }
+//     } catch (err) {
+//       console.error(err);
+//     }
+//   };
 
   const handleRemove = async (song) => {
     try {
       const params = new URLSearchParams({
         email: userEmail,
-        artist: song.artist,
-        title: song.title,
-        album: song.album,
+        song_id: song.song_id,
       });
 
       const res = await fetch(`${API.remove}?${params.toString()}`, {
@@ -147,18 +201,26 @@ export default function MainPage() {
       });
 
       if (res.ok) {
-        setSubscriptions((prev) =>
-          prev.filter(
-            (s) =>
-              !(
-                s.artist === song.artist &&
-                s.title === song.title &&
-                s.album === song.album
-              )
-          )
-        );
+        // Refetch subscriptions from backend to ensure state sync
+        const subsRes = await fetch(`${API.getSubscribe}?email=${userEmail}`);
+        const rawSubs = await subsRes.json();
+        //let parsed;
+
+//         if (rawSubs.body) {
+//           parsed = JSON.parse(rawSubs.body);
+//         } else if (typeof rawSubs === "string") {
+//           parsed = JSON.parse(rawSubs);
+//         } else {
+//           parsed = rawSubs;
+//         }
+//
+//         setSubscriptions(Array.isArray(parsed) ? parsed : []);
+
+        setSubscriptions(Array.isArray(rawSubs) ? rawSubs : []);
       }
-    } catch {}
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const getTitle = (song) => {
@@ -215,9 +277,9 @@ export default function MainPage() {
           <p>No subscriptions yet</p>
         ) : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-            {subscriptions.map((song, i) => (
+            {Array.isArray(subscriptions) && subscriptions.map((song, i) => (
               <div key={i} style={cardStyle}>
-                <img src={song.image_url} style={imgStyle} />
+                <img src={song.image_url} alt="song" style={imgStyle} />
                 <div style={textStyle}>
                   <h3 style={{ fontSize: "14px", margin: 0 }}>
                     {getTitle(song)}
@@ -256,7 +318,7 @@ export default function MainPage() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
           {queryResults.map((song, i) => (
             <div key={i} style={cardStyle}>
-              <img src={song.image_url} style={imgStyle} />
+              <img src={song.image_url} alt="song" style={imgStyle} />
 
               <div style={textStyle}>
                 <h3 style={{ fontSize: "14px", margin: 0 }}>
