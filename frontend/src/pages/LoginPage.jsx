@@ -23,28 +23,21 @@ export default function LoginPage() {
         });
 
         const data = await res.json();
+        console.log('Login response:', data);
+        const body = typeof data.body === 'string' ? JSON.parse(data.body) : data;
 
-        if (res.ok && data.success) {
+        if (res.ok && body.user_name) {
           sessionStorage.setItem('user_email', email);
-          sessionStorage.setItem('user_name', data.user_name);
+          sessionStorage.setItem('user_name', body.user_name);
           navigate('/main');
         } else {
-          setError('email or password is incorrect');
+          setError('email or password is invalid');
         }
       } catch (err) {
-        setError('email or password is incorrect');
+        setError('email or password is invalid');
       } finally {
         setLoading(false);
       }
-
-      // // Dummy credentials for testing
-      // if (email === 'test@student.rmit.edu.au' && password === 'test@rmit123') {
-      //   sessionStorage.setItem('user_email', email);
-      //   sessionStorage.setItem('user_name', 'TestUser');
-      //   navigate('/main');
-      // } else {
-      //   setError('email or password is invalid');
-      // }
     };
 
     return (
