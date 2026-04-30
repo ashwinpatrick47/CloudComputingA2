@@ -33,9 +33,13 @@ export default function MainPage() {
         });
   
         const data = await res.json();
-        setSubscriptions(data);
+
+        // Handle cases where body is a string that needs parsing
+        const parsed = typeof data.body === 'string' ? JSON.parse(data.body) : data;
+        setSubscriptions(Array.isArray(parsed) ? parsed : []);
       } catch (err) {
         console.error('Failed to load subscriptions:', err);
+        setSubscriptions([]); // fallback to empty array
       }
     };
   
@@ -161,6 +165,14 @@ export default function MainPage() {
     }
   };
 
+  // Helper to extract title from album_title composite key
+  const getTitle = (song) => {
+    if (song.album_title) {
+      return song.album_title.split('#')[1];
+    }
+    return song.title;
+  };
+
   return (
     <div className="main-page">
       <div className="main-header">
@@ -187,7 +199,7 @@ export default function MainPage() {
                   className="artist-img"
                 />
                 <div className="song-info">
-                  <h3>{song.title}</h3>
+                  <h3>{getTitle(song)}</h3>
                   <p>
                     {song.artist} - {song.album} ({song.year})
                   </p>
