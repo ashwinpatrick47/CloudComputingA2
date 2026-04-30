@@ -256,7 +256,8 @@ export default function MainPage() {
     border: "none",
     borderRadius: "6px",
     cursor: "pointer",
-    color: "white",
+    color: "red",
+
   };
 
   return (
@@ -291,7 +292,7 @@ export default function MainPage() {
 
                 <button
                   onClick={() => handleRemove(song)}
-                  style={{ ...btnBase, background: "#e53935" }}
+                  style={{ ...btnBase, background: "#e58034" }}
                 >
                   Remove
                 </button>
@@ -310,7 +311,19 @@ export default function MainPage() {
           <input placeholder="Artist" value={artistInput} onChange={(e) => setArtistInput(e.target.value)} />
           <input placeholder="Year" value={yearInput} onChange={(e) => setYearInput(e.target.value)} />
           <input placeholder="Album" value={albumInput} onChange={(e) => setAlbumInput(e.target.value)} />
-          <button onClick={handleQuery}>Search</button>
+          <button
+            onClick={handleQuery}
+            style={{
+              background: "orange",
+              color: "red",
+              border: "none",
+              padding: "10px 18px",
+              borderRadius: "10px",
+              cursor: "pointer",
+            }}
+          >
+            Search
+          </button>
         </div>
 
         {noResults && <p>No results found</p>}
