@@ -5,3 +5,4 @@ export const API = {
     subscribe: 'https://bwy3owi3m2.execute-api.us-east-1.amazonaws.com/default/subscribe-function',
     remove:    'https://mdkpj3r8le.execute-api.us-east-1.amazonaws.com/default/remove-function',
   };
+
