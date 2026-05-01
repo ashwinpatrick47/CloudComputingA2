@@ -67,23 +67,6 @@ export default function MainPage() {
         const res = await fetch(`${API.getSubscribe}?email=${userEmail}`);
         const raw = await res.json();
         setSubscriptions(Array.isArray(raw) ? raw : []);
-
-
-//         let parsed;
-//
-//         if (typeof raw === "string") {
-//           parsed = JSON.parse(raw);
-//         } else if (raw.body) {
-//           parsed = typeof raw.body === "string" ? JSON.parse(raw.body) : raw.body;
-//         } else {
-//           parsed = raw;
-//         }
-//
-//         setSubscriptions(Array.isArray(parsed) ? parsed : []);
-
-
-
-
       } catch {
         setSubscriptions([]);
       }
@@ -112,7 +95,7 @@ export default function MainPage() {
     navigate("/");
   };
 
-  // SEARCH (FIXED)
+  // SEARCH 
   const handleQuery = async () => {
     setNoResults(false);
 
@@ -124,7 +107,6 @@ export default function MainPage() {
       if (yearInput) params.append("year", yearInput);
       if (titleInput) params.append("title", titleInput);
 
-      // IMPORTANT FIX: allow empty search → return all songs
       const url =
         params.toString().length > 0
           ? `${API.query}?${params.toString()}`
@@ -165,30 +147,6 @@ export default function MainPage() {
     }
   };
 
-//       const result = await res.json();
-//       if (res.ok) {
-//         // Refetch subscriptions from backend instead of appending
-//         const subsRes = await fetch(`${API.getSubscribe}?email=${userEmail}`);
-//         const rawSubs = await subsRes.json();
-//         let parsed;
-//
-//         if (rawSubs.body) {
-//           parsed = JSON.parse(rawSubs.body);
-//         } else if (typeof rawSubs === "string") {
-//           parsed = JSON.parse(rawSubs);
-//         } else {
-//           parsed = rawSubs;
-//         }
-//
-//         setSubscriptions(Array.isArray(parsed) ? parsed : []);
-//       } else {
-//           alert(result.body || JSON.stringify(result));
-//           }
-//     } catch (err) {
-//       console.error(err);
-//     }
-//   };
-
   const handleRemove = async (song) => {
     try {
       const params = new URLSearchParams({
@@ -205,17 +163,6 @@ export default function MainPage() {
         const subsRes = await fetch(`${API.getSubscribe}?email=${userEmail}`);
         const rawSubs = await subsRes.json();
         //let parsed;
-
-//         if (rawSubs.body) {
-//           parsed = JSON.parse(rawSubs.body);
-//         } else if (typeof rawSubs === "string") {
-//           parsed = JSON.parse(rawSubs);
-//         } else {
-//           parsed = rawSubs;
-//         }
-//
-//         setSubscriptions(Array.isArray(parsed) ? parsed : []);
-
         setSubscriptions(Array.isArray(rawSubs) ? rawSubs : []);
       }
     } catch (err) {
@@ -230,7 +177,7 @@ export default function MainPage() {
     return song.title;
   };
 
-  // UI styles (FIXED BUTTON STYLE ISSUE)
+  // UI styles 
   const cardStyle = {
     width: "320px",
     display: "flex",
