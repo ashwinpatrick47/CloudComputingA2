@@ -22,9 +22,9 @@ export default function LoginPage() {
           body: JSON.stringify({ email, password }),
         });
 
-        const raw = await res.json();
-        const data = typeof raw.body === "string" ? JSON.parse(raw.body) : raw;
-
+        const data = await res.json();
+        console.log('Login response:', data);
+        const body = typeof data.body === 'string' ? JSON.parse(data.body) : data;
 
         if (res.ok && body.user_name) {
           sessionStorage.setItem('user_email', email);
