@@ -264,9 +264,9 @@ export default function MainPage() {
     <div className="main-page">
       <div className="main-header">
         <h1>Tune Vault</h1>
-        <div>
+        <div className="main-user-info">
           <span>Welcome, {userName}</span>
-          <button onClick={handleLogout}>Logout</button>
+          <button onClick={handleLogout} className="logout-btn">Logout</button>
         </div>
       </div>
 
