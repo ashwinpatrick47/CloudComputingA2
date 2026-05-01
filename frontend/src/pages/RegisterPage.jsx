@@ -20,16 +20,27 @@ export default function RegisterPage() {
       const res = await fetch(API.register, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, user_name: username, password }),
+        body: JSON.stringify({
+          email,
+          user_name: username,
+          password,
+        }),
       });
 
-      const data = await res.json();
+      const raw = await res.json();
 
-      if (res.status === 409 || !data.success) {
-        setError('The email already exists');
-      } else {
-        navigate('/');
+      // handle BOTH API Gateway + Lambda wrapped responses safely
+      const data =
+        raw.body && typeof raw.body === "string"
+          ? JSON.parse(raw.body)
+          : raw;
+
+      if (res.status !== 200 && res.status !== 201) {
+        setError(data.message || "Registration failed");
+        return;
       }
+
+      navigate('/');
     } catch (err) {
       setError('Something went wrong. Please try again.');
     } finally {

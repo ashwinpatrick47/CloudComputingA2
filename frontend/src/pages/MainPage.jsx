@@ -18,103 +18,117 @@ export default function MainPage() {
   const [yearInput, setYearInput] = useState("");
   const [albumInput, setAlbumInput] = useState("");
 
-  // Redirect to login page if not logged in
-  useEffect(() => {
-    if (!userEmail) {
-      navigate("/");
-    }
-  }, []);
+  // normalize API response
+  const toArray = (data) => {
+    if (!data) return [];
 
+    // CASE 1: already array
+    if (Array.isArray(data)) return data;
+
+    // CASE 2: raw string (VERY IMPORTANT FIX)
+    if (typeof data === "string") {
+      try {
+        const parsed = JSON.parse(data);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    // CASE 3: API Gateway format
+    if (data.body) {
+      try {
+        const parsed =
+          typeof data.body === "string"
+            ? JSON.parse(data.body)
+            : data.body;
+
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+
+    // CASE 4: songs wrapper
+    if (data.songs && Array.isArray(data.songs)) return data.songs;
+
+    return [];
+  };
+
+  // auth redirect
+  useEffect(() => {
+    if (!userEmail) navigate("/");
+  }, [userEmail, navigate]);
+
+  // load subscriptions
   useEffect(() => {
     const fetchSubscriptions = async () => {
       try {
-        const res = await fetch(`${API.subscribe}?email=${userEmail}`, {
-          method: 'GET',
-        });
-  
-        const data = await res.json();
-
-        // Handle cases where body is a string that needs parsing
-        const parsed = typeof data.body === 'string' ? JSON.parse(data.body) : data;
-        setSubscriptions(Array.isArray(parsed) ? parsed : []);
-      } catch (err) {
-        console.error('Failed to load subscriptions:', err);
-        setSubscriptions([]); // fallback to empty array
+        const res = await fetch(`${API.getSubscribe}?email=${userEmail}`);
+        const raw = await res.json();
+        setSubscriptions(Array.isArray(raw) ? raw : []);
+      } catch {
+        setSubscriptions([]);
       }
     };
-  
-    if (userEmail) {
-      fetchSubscriptions();
-    }
+
+    if (userEmail) fetchSubscriptions();
+  }, [userEmail]);
+
+  // load ALL songs on page load
+  useEffect(() => {
+    const fetchAllSongs = async () => {
+      try {
+        const res = await fetch(`${API.query}`);
+        const data = await res.json();
+        setQueryResults(toArray(data));
+      } catch {
+        setQueryResults([]);
+      }
+    };
+
+    fetchAllSongs();
   }, []);
 
-  // Logout handler
   const handleLogout = () => {
     sessionStorage.clear();
     navigate("/");
   };
 
+  // SEARCH 
   const handleQuery = async () => {
     setNoResults(false);
-    setQueryResults([]);
-  
-    if (!titleInput && !artistInput && !yearInput && !albumInput) {
-      alert('Please fill in at least one field');
-      return;
-    }
 
-      // DUMMY DATA - remove when CORS is fixed
-    const dummyResults = [
-      {
-        title: 'Shake It Off',
-        artist: 'Taylor Swift',
-        album: '1989',
-        year: 2014,
-        image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/191125_Taylor_Swift_at_the_2019_American_Music_Awards_%28cropped%29.png/440px-191125_Taylor_Swift_at_the_2019_American_Music_Awards_%28cropped%29.png'
-      },
-      {
-        title: 'Blank Space',
-        artist: 'Taylor Swift',
-        album: '1989',
-        year: 2014,
-        image_url: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/191125_Taylor_Swift_at_the_2019_American_Music_Awards_%28cropped%29.png/440px-191125_Taylor_Swift_at_the_2019_American_Music_Awards_%28cropped%29.png'
-      }
-    ];
+    try {
+      const params = new URLSearchParams();
 
-    if (dummyResults.length === 0) {
-      setNoResults(true);
-    } else {
-      setQueryResults(dummyResults);
+      if (artistInput) params.append("artist", artistInput);
+      if (albumInput) params.append("album", albumInput);
+      if (yearInput) params.append("year", yearInput);
+      if (titleInput) params.append("title", titleInput);
+
+      const url =
+        params.toString().length > 0
+          ? `${API.query}?${params.toString()}`
+          : `${API.query}`;
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const songs = toArray(data);
+
+      setQueryResults(songs);
+      setNoResults(songs.length === 0);
+    } catch {
+      setQueryResults([]);
     }
-  
-    // try {
-    //   const params = new URLSearchParams();
-    //   if (artistInput) params.append('artist', artistInput);
-    //   if (albumInput) params.append('album', albumInput);
-    //   if (yearInput) params.append('year', yearInput);
-    //   if (titleInput) params.append('title', titleInput);
-  
-    //   const res = await fetch(`${API.query}?${params.toString()}`, {
-    //     method: 'GET',
-    //   });
-  
-    //   const data = await res.json();
-  
-    //   if (data.length === 0) {
-    //     setNoResults(true);
-    //   } else {
-    //     setQueryResults(data);
-    //   }
-    // } catch (err) {
-    //   console.error('Query error:', err);
-    // }
   };
 
   const handleSubscribe = async (song) => {
     try {
       const res = await fetch(API.subscribe, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: userEmail,
           artist: song.artist,
@@ -124,17 +138,12 @@ export default function MainPage() {
           image_url: song.image_url,
         }),
       });
-  
-      const data = await res.json();
-  
+
       if (res.ok) {
-        // Add to subscriptions list immediately without re-fetching
         setSubscriptions((prev) => [...prev, song]);
-      } else {
-        alert(data || 'Already subscribed');
       }
     } catch (err) {
-      console.error('Subscribe error:', err);
+      console.error(err);
     }
   };
 
@@ -142,35 +151,60 @@ export default function MainPage() {
     try {
       const params = new URLSearchParams({
         email: userEmail,
-        artist: song.artist,
-        title: song.title,
-        album: song.album,
+        song_id: song.song_id,
       });
-  
+
       const res = await fetch(`${API.remove}?${params.toString()}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-  
+
       if (res.ok) {
-        setSubscriptions((prev) =>
-          prev.filter(
-            (s) => !(s.artist === song.artist && s.title === song.title && s.album === song.album)
-          )
-        );
-      } else {
-        alert('Failed to remove');
+        // Refetch subscriptions from backend to ensure state sync
+        const subsRes = await fetch(`${API.getSubscribe}?email=${userEmail}`);
+        const rawSubs = await subsRes.json();
+        //let parsed;
+        setSubscriptions(Array.isArray(rawSubs) ? rawSubs : []);
       }
     } catch (err) {
-      console.error('Remove error:', err);
+      console.error(err);
     }
   };
 
-  // Helper to extract title from album_title composite key
   const getTitle = (song) => {
     if (song.album_title) {
-      return song.album_title.split('#')[1];
+      return song.album_title.split("#")[1];
     }
     return song.title;
+  };
+
+  // UI styles 
+  const cardStyle = {
+    width: "320px",
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    padding: "10px",
+    border: "1px solid #ddd",
+    borderRadius: "10px",
+  };
+
+  const imgStyle = {
+    width: "50px",
+    height: "50px",
+    objectFit: "cover",
+    borderRadius: "6px",
+  };
+
+  const textStyle = { flex: 1 };
+
+  const btnBase = {
+    padding: "5px 10px",
+    fontSize: "12px",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    color: "red",
+
   };
 
   return (
@@ -178,86 +212,91 @@ export default function MainPage() {
       <div className="main-header">
         <h1>Tune Vault</h1>
         <div className="main-user-info">
-          <span>Welcome, {userName}!</span>
-          <button onClick={handleLogout} className="logout-btn">
-            Logout
-          </button>
+          <span>Welcome, {userName}</span>
+          <button onClick={handleLogout} className="logout-btn">Logout</button>
         </div>
       </div>
 
+      {/* SUBSCRIPTIONS */}
       <div className="section">
         <h2>Your Subscriptions</h2>
+        <p>{subscriptions.length} subscription(s)</p>
+
         {subscriptions.length === 0 ? (
-          <p>You have no subscriptions yet.</p>
+          <p>No subscriptions yet</p>
         ) : (
-          <div className="subscription-list">
-            {subscriptions.map((song, index) => (
-              <div key={index} className="song-card">
-                <img
-                  src={song.image_url}
-                  alt={song.artist}
-                  className="artist-img"
-                />
-                <div className="song-info">
-                  <h3>{getTitle(song)}</h3>
-                  <p>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+            {Array.isArray(subscriptions) && subscriptions.map((song, i) => (
+              <div key={i} style={cardStyle}>
+                <img src={song.image_url} alt="song" style={imgStyle} />
+                <div style={textStyle}>
+                  <h3 style={{ fontSize: "14px", margin: 0 }}>
+                    {getTitle(song)}
+                  </h3>
+                  <p style={{ fontSize: "12px", margin: 0 }}>
                     {song.artist} - {song.album} ({song.year})
                   </p>
                 </div>
-                <button className="remove-btn" onClick={() => handleRemove(song)}>Remove</button>
+
+                <button
+                  onClick={() => handleRemove(song)}
+                  style={{ ...btnBase, background: "#e58034" }}
+                >
+                  Remove
+                </button>
               </div>
             ))}
           </div>
         )}
       </div>
 
+      {/* SEARCH */}
       <div className="section">
         <h2>Search Tunes</h2>
+        <p>{queryResults.length} song(s) found</p>
+
         <div className="search-form">
-          <input
-            type="text"
-            placeholder="Title"
-            value={titleInput}
-            onChange={(e) => setTitleInput(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Artist"
-            value={artistInput}
-            onChange={(e) => setArtistInput(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Year"
-            value={yearInput}
-            onChange={(e) => setYearInput(e.target.value)}
-          />
-          <input
-            type="text"
-            placeholder="Album"
-            value={albumInput}
-            onChange={(e) => setAlbumInput(e.target.value)}
-          />
-          <button className="search-btn" onClick={handleQuery}>Search</button>
+          <input placeholder="Title" value={titleInput} onChange={(e) => setTitleInput(e.target.value)} />
+          <input placeholder="Artist" value={artistInput} onChange={(e) => setArtistInput(e.target.value)} />
+          <input placeholder="Year" value={yearInput} onChange={(e) => setYearInput(e.target.value)} />
+          <input placeholder="Album" value={albumInput} onChange={(e) => setAlbumInput(e.target.value)} />
+          <button
+            onClick={handleQuery}
+            style={{
+              background: "orange",
+              color: "red",
+              border: "none",
+              padding: "10px 18px",
+              borderRadius: "10px",
+              cursor: "pointer",
+            }}
+          >
+            Search
+          </button>
         </div>
 
-        {noResults && <p className="empty-msg"> No result is retrieved. Please query again</p>}
+        {noResults && <p>No results found</p>}
 
-        <div className="search-results">
-          {queryResults.map((song, index) => (
-            <div key={index} className="song-card">
-              <img
-                src={song.image_url}
-                alt={song.artist}
-                className="artist-img"
-              />
-              <div className="song-info">
-                <h3>{song.title}</h3>
-                <p>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+          {queryResults.map((song, i) => (
+            <div key={i} style={cardStyle}>
+              <img src={song.image_url} alt="song" style={imgStyle} />
+
+              <div style={textStyle}>
+                <h3 style={{ fontSize: "14px", margin: 0 }}>
+                  {song.title}
+                </h3>
+                <p style={{ fontSize: "12px", margin: 0 }}>
                   {song.artist} - {song.album} ({song.year})
                 </p>
               </div>
-              <button className="subscribe-btn" onClick={() => handleSubscribe(song)}>Subscribe</button>
+
+              <button
+                onClick={() => handleSubscribe(song)}
+                style={{ ...btnBase, background: "orange" }}
+              >
+                Subscribe
+              </button>
             </div>
           ))}
         </div>
