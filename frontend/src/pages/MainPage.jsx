@@ -273,6 +273,7 @@ export default function MainPage() {
       {/* SUBSCRIPTIONS */}
       <div className="section">
         <h2>Your Subscriptions</h2>
+        <p>{subscriptions.length} subscription(s)</p>
 
         {subscriptions.length === 0 ? (
           <p>No subscriptions yet</p>
@@ -305,6 +306,7 @@ export default function MainPage() {
       {/* SEARCH */}
       <div className="section">
         <h2>Search Tunes</h2>
+        <p>{queryResults.length} song(s) found</p>
 
         <div className="search-form">
           <input placeholder="Title" value={titleInput} onChange={(e) => setTitleInput(e.target.value)} />
