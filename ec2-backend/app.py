@@ -50,9 +50,12 @@ def login():
 def register():
     body = request.get_json()
 
-    email = body['email']
-    username = body['user_name']
-    password = body['password']
+    email = body.get('email')
+    username = body.get('user_name')
+    password = body.get('password')
+
+    if not email or not username or not password:
+        return jsonify('Missing required fields'), 400
 
     # check if user exists
     response = login_table.get_item(Key={'email': email})
@@ -94,7 +97,7 @@ def query_music():
     for item in items:
         if album and item.get('album') != album:
             continue
-        if year and item.get('year') != year:
+        if year and str(item.get('year', '')) != year:
             continue
         if title and title.lower() not in item.get('title', '').lower():
             continue
