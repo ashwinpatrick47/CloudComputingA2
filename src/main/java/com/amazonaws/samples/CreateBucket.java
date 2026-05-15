@@ -1,18 +1,18 @@
+//Week 5 – Cloud Storage Services used for reference
 package com.amazonaws.samples;
+
+import java.io.IOException;
 
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
-import com.amazonaws.auth.profile.ProfileCredentialsProvider;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CreateBucketRequest;
 import com.amazonaws.services.s3.model.GetBucketLocationRequest;
 
-import java.io.IOException;
-
 public class CreateBucket {
-
+// Create an S3 client and connect to the AWS region
     public static void main(String[] args) throws IOException {
         Regions clientRegion = Regions.US_EAST_1;
         String bucketName = "a2-assignment-cloud-computing-2026";

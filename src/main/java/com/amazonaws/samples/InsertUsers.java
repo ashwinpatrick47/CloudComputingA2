@@ -1,5 +1,5 @@
 package com.amazonaws.samples;
-
+//adapted from Practical Exercise 3: AWS Database Services
 import java.util.HashMap;
 import java.util.Map;
 
